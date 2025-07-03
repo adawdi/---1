@@ -1,2 +1,290 @@
-# ---1
-مرحبًا بك في لعبة تذكر الرموز، التحدي الذهني الممتع الذي يختبر قوة ذاكرتك البصرية وتركيزك!
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🧠 لعبة تذكر الرموز</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(to right, #00c9ff, #92fe9d);
+      text-align: center;
+      padding: 20px;
+      direction: rtl;
+      position: relative;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 28px;
+    }
+
+    #level, #message, #timer {
+      font-size: 20px;
+      margin-top: 15px;
+      color: white;
+    }
+
+    #display-area, #choices {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .shape-box {
+      font-size: 36px;
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .shape-box.selected {
+      background-color: #d0ffd0;
+    }
+
+    #restart-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: #00aaff;
+      cursor: pointer;
+    }
+
+    #start-btn, #whatsapp-btn {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #start-btn {
+      background: #ffffff;
+      color: #00aaff;
+    }
+
+    #whatsapp-btn {
+      background: #25d366;
+      color: white;
+      display: none;
+    }
+
+    @keyframes dance {
+      0% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.2) rotate(10deg); }
+      50% { transform: scale(1) rotate(-10deg); }
+      75% { transform: scale(1.2) rotate(10deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .correct-animate {
+      animation: dance 1s ease-in-out infinite;
+    }
+
+    @media (max-width: 600px) {
+      .shape-box {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+        padding: 15px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      #level, #message, #timer {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧠 لعبة تذكر الرموز</h1>
+  <button id="restart-btn" onclick="resetGame()" style="display: none;">🔁 إعادة</button>
+  <div id="level" style="display:none;"></div>
+  <div id="timer"></div>
+  <div id="display-area"></div>
+  <div id="choices"></div>
+  <div id="message"></div>
+
+  <button id="start-btn" onclick="startGame()">🚀 ابدأ اللعبة</button>
+  <button id="whatsapp-btn" onclick="sendToWhatsApp()">📤 أرسل نتيجتي عبر واتساب</button>
+
+  <script>
+    const allShapes = ['😂', '😍', '🤑', '😎', '😭', '😡', '🐕', '🪿', '🐘', '🦈', '🌹', '🍯', '🍼', '🔪', '🌍', '⏰️', '🚀', '✈️', '🌞', '🌧', '🔥', '⚽️', '📸', '✅️', '❌️', '🇾🇪'];
+    let currentSequence = [];
+    let level = 1;
+    let timerInterval;
+    let userAnswers = [];
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function resetGame() {
+      // إزالة كل الحركات المستمرة عند إعادة اللعبة
+      document.querySelectorAll('.correct-animate').forEach(el => el.classList.remove('correct-animate'));
+
+      level = 1;
+      document.getElementById('message').textContent = '';
+      document.getElementById('whatsapp-btn').style.display = 'none';
+      nextRound();
+    }
+
+    function startGame() {
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('restart-btn').style.display = 'inline-block';
+      document.getElementById('level').style.display = 'block';
+      resetGame();
+    }
+
+    function nextRound() {
+      document.getElementById('level').textContent = `المستوى: ${level}`;
+      document.getElementById('whatsapp-btn').style.display = 'none';
+      const displayArea = document.getElementById('display-area');
+      const choicesArea = document.getElementById('choices');
+      displayArea.innerHTML = '';
+      choicesArea.innerHTML = '';
+      userAnswers = [];
+
+      const availableShapes = shuffle(allShapes);
+      currentSequence = availableShapes.slice(0, level);
+
+      showSequence();
+    }
+
+    function showSequence() {
+      const displayArea = document.getElementById('display-area');
+      const timerDisplay = document.getElementById('timer');
+      const message = document.getElementById('message');
+      displayArea.innerHTML = '';
+      timerDisplay.innerHTML = '';
+      message.textContent = '🔍 احفظ الرموز التالية...';
+
+      currentSequence.forEach(shape => {
+        const box = document.createElement('div');
+        box.className = 'shape-box';
+        box.textContent = shape;
+        displayArea.appendChild(box);
+      });
+
+      let seconds = 5 + (level - 1) * 3;
+      timerDisplay.textContent = `⏳ تبقى ${seconds} ثانية`;
+
+      timerInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(timerInterval);
+          displayArea.innerHTML = '';
+          timerDisplay.innerHTML = '';
+          showChoices();
+        } else {
+          timerDisplay.textContent = `⏳ تبقى ${seconds} ثانية`;
+        }
+      }, 1000);
+    }
+
+    function showChoices() {
+      const choicesArea = document.getElementById('choices');
+      const message = document.getElementById('message');
+      choicesArea.innerHTML = '';
+      message.textContent = `اختر الرموز التي رأيتها (بدون ترتيب)`;
+
+      const numChoices = currentSequence.length + 4;
+      const wrongShapes = allShapes.filter(s => !currentSequence.includes(s));
+      const extra = shuffle(wrongShapes).slice(0, numChoices - currentSequence.length);
+      const allOptions = shuffle([...currentSequence, ...extra]);
+
+      allOptions.forEach(shape => {
+        const box = document.createElement('div');
+        box.className = 'shape-box';
+        box.textContent = shape;
+
+        box.onclick = () => {
+          if (box.classList.contains('selected')) return;
+          box.classList.add('selected');
+          userAnswers.push(shape);
+
+          if (userAnswers.length === currentSequence.length) {
+            checkAnswer();
+          }
+        };
+
+        choicesArea.appendChild(box);
+      });
+    }
+
+    function checkAnswer() {
+      const message = document.getElementById('message');
+      const boxes = document.querySelectorAll('.shape-box');
+
+      let correct = true;
+
+      boxes.forEach(box => {
+        const shape = box.textContent;
+        if (userAnswers.includes(shape)) {
+          if (currentSequence.includes(shape)) {
+            box.style.backgroundColor = '#d0ffd0'; // صحيح = أخضر
+          } else {
+            box.style.backgroundColor = '#ffd0d0'; // خطأ = أحمر
+            correct = false;
+          }
+        }
+      });
+
+      if (!correct) {
+        // إضافة الحركة المستمرة فقط للأشكال الصحيحة التي لم يتم اختيارها
+        boxes.forEach(box => {
+          const shape = box.textContent;
+          if (currentSequence.includes(shape) && !userAnswers.includes(shape)) {
+            box.classList.add('correct-animate');
+          }
+        });
+
+        message.textContent = '❌ خطأ! وصلت إلى المستوى: ' + level;
+        document.getElementById('whatsapp-btn').style.display = 'inline-block';
+      } else {
+        message.textContent = '✅ صحيح! إلى المستوى التالي';
+        level++;
+        if (level > 30) {
+          message.textContent = '🏆 تهانينا! وصلت إلى أعلى مستوى (30)';
+          document.getElementById('whatsapp-btn').style.display = 'inline-block';
+        } else {
+          setTimeout(() => nextRound(), 2000);
+        }
+      }
+    }
+
+    function getEvaluation(score) {
+      if (score <= 5) return "ذاكرة ضعيفة 👶";
+      if (score <= 10) return "متوسط الذاكرة 🧠";
+      if (score <= 15) return "جيد جدًا 👏";
+      if (score <= 20) return "ممتاز 🔥";
+      if (score <= 25) return "عبقري 💡";
+      return "خارق للعادة 🚀";
+    }
+
+    function sendToWhatsApp() {
+      const evalText = getEvaluation(level - 1);
+      const msg = `🧠 لقد استطعت تذكر "${level - 1}" من الأشكال.\nتقييمك: ${evalText}`;
+      const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window
